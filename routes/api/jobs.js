@@ -1,23 +1,17 @@
 const express = require('express')
+const { getJobs, getJob, setJob, updateJob, deleteJob } = require('../../controllers/getJobs')
+const uuid = require('uuid')
+const moment = require('moment')
 const jobs = require('../../Jobs')
 
-const router = express.Router()
+
+const router = express.Router();
 
 // Get all Jobs
-router.get('/', (req, res) => {
-    res.json(jobs)
-})
-
-// Get a Single Job
-router.get('/:id', (req, res) => {
-    // res.send(req.params.id)
-    const found = jobs.some(job => job.id === parseInt(req.params.id))
-    if (!found) {
-        res.status(400)
-        res.json({ message: `Job with id:${req.params.id} not found` })
-    }
-    res.json(jobs.filter(job => job.id === parseInt(req.params.id)))
-})
-
+router.get('/', getJobs)
+router.get('/:id', getJob)
+router.post('/', setJob)
+router.put('/:id', updateJob)
+router.delete('/:id', deleteJob)
 
 module.exports = router
