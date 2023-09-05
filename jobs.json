@@ -1,4 +1,4 @@
-const jobs = [
+[
     {
         "company": "Photosnap",
         "logo": "./images/photosnap.svg",
@@ -185,5 +185,3 @@ const jobs = [
         ]
     }
 ]
-
-module.exports = jobs
