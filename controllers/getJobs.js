@@ -3,13 +3,15 @@ const moment = require('moment')
 const jobs = require('../Jobs')
 const asyncHandler = require('express-async-handler')
 const Job = require('../models/jobModel')
-// Get all Jobs controller
+
+
+// GET all Jobs
 const getJobs = asyncHandler(async (req, res) => {
     const job = await Job.find()
     res.status(200).json(job)
 })
 
-// Get a single Job
+// GET a single Job
 const getJob = asyncHandler(async (req, res) => {
     const jobId = req.params.id
     const job = await Job.findById(jobId)
@@ -19,9 +21,9 @@ const getJob = asyncHandler(async (req, res) => {
     res.status(200).json(job)
 })
 
-// Post a Job 
+// POST a Job
 const setJob = asyncHandler(async (req, res) => {
-    const newJob = {
+    const newJob = await Job.create({
         company: req.body.company,
         logo: req.body.logo,
         isnew: req.body.isTrue,
@@ -34,19 +36,12 @@ const setJob = asyncHandler(async (req, res) => {
         location: req.body.location,
         languages: req.body.languages,
         tools: req.body.tools
-    }
+    })
     if (!newJob.company) {
         res.status(400).json({ message: `please add company name` })
     }
     else {
-        const job = new Job(newJob)
-        try {
-            const saveJob = await job.save()
-            res.json(saveJob)
-        } catch (error) {
-            console.error(error)
-            res.status(500).json({ message: 'Failed to post job' })
-        }
+        res.status(201).json(newJob)
     }
 })
 
@@ -58,10 +53,11 @@ const updateJob = asyncHandler(async (req, res) => {
         res.status(400)
         res.json({ message: `Job with id:${req.params.id} not found` })
     }
-    else {
-        res.json(found)
-    }
+    const updatedJob = await Job.findByIdAndUpdate(jobId, req.body, { new: true })
+    res.status(200).json(updatedJob)
+
 })
+
 // Delete Job
 const deleteJob = asyncHandler(async (req, res) => {
     // res.send(req.params.id)
@@ -74,4 +70,5 @@ const deleteJob = asyncHandler(async (req, res) => {
         res.json(jobs.filter(job => job.id !== parseInt(req.params.id)))
     }
 })
+
 module.exports = { getJobs, getJob, setJob, updateJob, deleteJob }
