@@ -2,7 +2,6 @@ const express = require('express')
 const { getJobs, getJob, setJob, updateJob, deleteJob } = require('../../controllers/getJobs')
 const uuid = require('uuid')
 const moment = require('moment')
-const jobs = require('../../Jobs')
 
 
 const router = express.Router();
