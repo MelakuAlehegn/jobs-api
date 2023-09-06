@@ -61,14 +61,17 @@ const updateJob = asyncHandler(async (req, res) => {
 // Delete Job
 const deleteJob = asyncHandler(async (req, res) => {
     // res.send(req.params.id)
-    const found = jobs.some(job => job.id === parseInt(req.params.id))
-    if (!found) {
+    const jobId = req.params.id
+    const job = await Job.findById(jobId)
+    if (!job) {
         res.status(400)
         res.json({ message: `Job with id:${req.params.id} not found` })
     }
-    else {
-        res.json(jobs.filter(job => job.id !== parseInt(req.params.id)))
-    }
+    await Job.findByIdAndRemove(req.params.id)
+    return res.status(200).json({
+        id: req.params.id,
+        name: job.company
+    })
 })
 
 module.exports = { getJobs, getJob, setJob, updateJob, deleteJob }
