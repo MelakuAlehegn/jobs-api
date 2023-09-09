@@ -1,11 +1,12 @@
-const uuid = require('uuid')
 const moment = require('moment')
 const asyncHandler = require('express-async-handler')
 const Job = require('../models/jobModel')
 
 // GET all Jobs
 const getJobs = asyncHandler(async (req, res) => {
-    const { page, limit, company, position, location, sort } = req.query
+    let { page, limit, company, position, location, sort } = req.query
+    limit = Number(limit)
+    page = Number(page)
     const skip = (page - 1) * limit
     const filter = {};
     let query;
@@ -30,9 +31,9 @@ const getJobs = asyncHandler(async (req, res) => {
     let totalJobs = await Job.countDocuments(filter);
     const totalPages = Math.ceil(totalJobs / limit)
     const response = {
-        totalJobs: totalJobs,
-        totalPages: totalPages || 0,
-        currentPage: page,
+        allJobs: totalJobs,
+        pages: totalPages || 0,
+        currentPage: page || 0,
         jobs: job
     }
     res.status(200).json(response)
