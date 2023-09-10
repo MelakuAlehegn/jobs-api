@@ -43,6 +43,9 @@ const getJobs = asyncHandler(async (req, res) => {
 // GET a single Job
 const getJob = asyncHandler(async (req, res) => {
     const jobId = req.params.id
+    if (jobId.length !== 24) {
+        return res.status(400).json({ error: 'Invalid job ID' });
+    }
     const job = await Job.findById(jobId)
     if (!job) {
         return res.status(400).json({ error: 'Job not found' })
@@ -74,6 +77,9 @@ const setJob = asyncHandler(async (req, res) => {
 // Update a job
 const updateJob = asyncHandler(async (req, res) => {
     const jobId = req.params.id
+    if (jobId.length !== 24) {
+        return res.status(400).json({ error: 'Invalid job ID' });
+    }
     const { error } = validate(req.body)
     if (error) return res.status(400).json(error.details[0].message)
     const job = await Job.findById(jobId)
