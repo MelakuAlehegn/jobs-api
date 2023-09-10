@@ -1,19 +1,51 @@
-const uuid = require('uuid')
 const moment = require('moment')
-const jobs = require('../Jobs')
 const asyncHandler = require('express-async-handler')
-const Job = require('../models/jobModel')
+const { Job, validate } = require('../models/jobModel')
 
 
 // GET all Jobs
 const getJobs = asyncHandler(async (req, res) => {
-    const job = await Job.find()
-    res.status(200).json(job)
+    let { page, limit, company, position, location, sort } = req.query
+    limit = Number(limit)
+    page = Number(page)
+    const skip = (page - 1) * limit
+    const filter = {};
+    let query;
+    if (company) {
+        filter.company = company;
+    } if (position) {
+        filter.position = position;
+    } if (location) {
+        filter.location = location;
+    }
+
+    query = Job.find(filter)
+
+    if (sort === "company") {
+        query.sort({ company: 1 });
+    } if (sort === "position") {
+        query.sort({ position: 1 });
+    } if (sort === "location") {
+        query.sort({ location: 1 });
+    }
+    const job = await query.skip(skip).limit(Number(limit));
+    let totalJobs = await Job.countDocuments(filter);
+    const totalPages = Math.ceil(totalJobs / limit)
+    const response = {
+        allRecords: totalJobs,
+        pages: totalPages || 0,
+        currentPage: page || 0,
+        records: job
+    }
+    res.status(200).json(response)
 })
 
 // GET a single Job
 const getJob = asyncHandler(async (req, res) => {
     const jobId = req.params.id
+    if (jobId.length !== 24) {
+        return res.status(400).json({ error: 'Invalid job ID' });
+    }
     const job = await Job.findById(jobId)
     if (!job) {
         return res.status(400).json({ error: 'Job not found' })
@@ -23,7 +55,9 @@ const getJob = asyncHandler(async (req, res) => {
 
 // POST a Job
 const setJob = asyncHandler(async (req, res) => {
-    const newJob = await Job.create({
+    const { error } = validate(req.body)
+    if (error) return res.status(400).json(error.details[0].message)
+    const job = await Job.create({
         company: req.body.company,
         logo: req.body.logo,
         isnew: req.body.isTrue,
@@ -37,17 +71,17 @@ const setJob = asyncHandler(async (req, res) => {
         languages: req.body.languages,
         tools: req.body.tools
     })
-    if (!newJob.company) {
-        res.status(400).json({ message: `please add company name` })
-    }
-    else {
-        res.status(201).json(newJob)
-    }
+    res.status(201).json(job)
 })
 
 // Update a job
 const updateJob = asyncHandler(async (req, res) => {
     const jobId = req.params.id
+    if (jobId.length !== 24) {
+        return res.status(400).json({ error: 'Invalid job ID' });
+    }
+    const { error } = validate(req.body)
+    if (error) return res.status(400).json(error.details[0].message)
     const job = await Job.findById(jobId)
     if (!job) {
         res.status(400)
