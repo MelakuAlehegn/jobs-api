@@ -1,6 +1,7 @@
 const moment = require('moment')
 const asyncHandler = require('express-async-handler')
-const Job = require('../models/jobModel')
+const { Job, validate } = require('../models/jobModel')
+
 
 // GET all Jobs
 const getJobs = asyncHandler(async (req, res) => {
@@ -31,10 +32,10 @@ const getJobs = asyncHandler(async (req, res) => {
     let totalJobs = await Job.countDocuments(filter);
     const totalPages = Math.ceil(totalJobs / limit)
     const response = {
-        allJobs: totalJobs,
+        allRecords: totalJobs,
         pages: totalPages || 0,
         currentPage: page || 0,
-        jobs: job
+        records: job
     }
     res.status(200).json(response)
 })
@@ -51,7 +52,9 @@ const getJob = asyncHandler(async (req, res) => {
 
 // POST a Job
 const setJob = asyncHandler(async (req, res) => {
-    const newJob = await Job.create({
+    const { error } = validate(req.body)
+    if (error) return res.status(400).json(error.details[0].message)
+    const job = await Job.create({
         company: req.body.company,
         logo: req.body.logo,
         isnew: req.body.isTrue,
@@ -65,12 +68,7 @@ const setJob = asyncHandler(async (req, res) => {
         languages: req.body.languages,
         tools: req.body.tools
     })
-    if (!newJob.company) {
-        res.status(400).json({ message: `please add company name` })
-    }
-    else {
-        res.status(201).json(newJob)
-    }
+    res.status(201).json(job)
 })
 
 // Update a job
