@@ -74,6 +74,8 @@ const setJob = asyncHandler(async (req, res) => {
 // Update a job
 const updateJob = asyncHandler(async (req, res) => {
     const jobId = req.params.id
+    const { error } = validate(req.body)
+    if (error) return res.status(400).json(error.details[0].message)
     const job = await Job.findById(jobId)
     if (!job) {
         res.status(400)
