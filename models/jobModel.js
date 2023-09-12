@@ -5,6 +5,11 @@ const Job = mongoose.model(
     "Jobs",
     new mongoose.Schema(
         {
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+                ref: 'User'
+            },
             company: {
                 type: String,
                 required: true,
@@ -42,7 +47,9 @@ const Job = mongoose.model(
             },
             languages: [String],
             tools: [String]
-        }
+        }, {
+        timestamps: true
+    }
     )
 )
 function validateJobs(job) {

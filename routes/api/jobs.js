@@ -1,5 +1,5 @@
 const express = require('express')
-const { getJobs, getJob, setJob, updateJob, deleteJob } = require('../../controllers/getJobs')
+const { getJobs, getJob, setJob, updateJob, deleteJob } = require('../../controllers/jobController')
 const uuid = require('uuid')
 const moment = require('moment')
 
