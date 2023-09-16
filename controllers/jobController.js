@@ -1,8 +1,7 @@
 const moment = require('moment')
 const asyncHandler = require('express-async-handler')
-const { Job, validate } = require('../models/jobModel')
-
-
+const { Job, validate, validateUpdate } = require('../models/jobModel')
+const { User, validateUser } = require('../models/userModel')
 // GET all Jobs
 const getJobs = asyncHandler(async (req, res) => {
     let { page, limit, company, position, location, sort } = req.query
@@ -10,7 +9,9 @@ const getJobs = asyncHandler(async (req, res) => {
     page = Number(page)
     const skip = (page - 1) * limit
     const filter = {};
+    const sorted = {}
     let query;
+
     if (company) {
         filter.company = company;
     } if (position) {
@@ -18,17 +19,18 @@ const getJobs = asyncHandler(async (req, res) => {
     } if (location) {
         filter.location = location;
     }
-
+    filter.user = req.user.id
     query = Job.find(filter)
-
     if (sort === "company") {
-        query.sort({ company: 1 });
+        sorted.company = company
     } if (sort === "position") {
-        query.sort({ position: 1 });
+        sorted.position = position
     } if (sort === "location") {
-        query.sort({ location: 1 });
+        sorted.location = location
     }
-    const job = await query.skip(skip).limit(Number(limit));
+
+    const sortedJobs = query.sort(sorted)
+    const job = await sortedJobs.skip(skip).limit(Number(limit));
     let totalJobs = await Job.countDocuments(filter);
     const totalPages = Math.ceil(totalJobs / limit)
     const response = {
@@ -58,6 +60,7 @@ const setJob = asyncHandler(async (req, res) => {
     const { error } = validate(req.body)
     if (error) return res.status(400).json(error.details[0].message)
     const job = await Job.create({
+        user: req.user.id,
         company: req.body.company,
         logo: req.body.logo,
         isnew: req.body.isTrue,
@@ -80,12 +83,19 @@ const updateJob = asyncHandler(async (req, res) => {
     if (jobId.length !== 24) {
         return res.status(400).json({ error: 'Invalid job ID' });
     }
-    const { error } = validate(req.body)
+    const { error } = validateUpdate(req.body)
     if (error) return res.status(400).json(error.details[0].message)
     const job = await Job.findById(jobId)
     if (!job) {
         res.status(400)
         res.json({ message: `Job with id:${req.params.id} not found` })
+    }
+    const user = User.findById(req.user.id)
+    if (!user) {
+        res.status(401).json('User not found')
+    }
+    if (job.user.toString() !== req.user.id) {
+        res.status(401).json('User not authorized')
     }
     const updatedJob = await Job.findByIdAndUpdate(jobId, req.body, { new: true })
     res.status(200).json(updatedJob)
@@ -96,13 +106,22 @@ const updateJob = asyncHandler(async (req, res) => {
 const deleteJob = asyncHandler(async (req, res) => {
     // res.send(req.params.id)
     const jobId = req.params.id
+    if (jobId.length !== 24) {
+        return res.status(400).json({ error: 'Invalid job ID' });
+    }
     const job = await Job.findById(jobId)
     if (!job) {
-        res.status(400)
-        res.json({ message: `Job with id:${req.params.id} not found` })
+        return res.status(400).json({ message: `Job with id:${req.params.id} not found` })
+    }
+    const user = await User.findById(req.user.id)
+    if (!user) {
+        return res.status(401).json('User not found')
+    }
+    if (job.user.toString() !== req.user.id) {
+        return res.status(401).json('User not authorized')
     }
     await Job.findByIdAndRemove(req.params.id)
-    return res.status(200).json({
+    res.status(200).json({
         id: req.params.id,
         name: job.company
     })

@@ -32,4 +32,4 @@ function validateUsers(user) {
     return schema.validate(user)
 }
 exports.User = User
-exports.validate = validateUsers
+exports.validateUser = validateUsers
