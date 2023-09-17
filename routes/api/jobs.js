@@ -6,10 +6,10 @@ const { protect } = require('../../middleware/auth')
 const router = express.Router();
 
 // Get all Jobs
-router.get('/', protect, getJobs)
+router.get('/', getJobs)
 router.get('/:id', protect, getJob)
-router.post('/', protect, setJob)
-router.put('/:id', protect, updateJob)
-router.delete('/:id', protect, deleteJob)
+router.post('/', protect('admin'), setJob)
+router.put('/:id', protect('admin'), updateJob)
+router.delete('/:id', protect('admin'), deleteJob)
 
 module.exports = router

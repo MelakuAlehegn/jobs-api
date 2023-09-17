@@ -18,6 +18,11 @@ const User = mongoose.model(
                 type: String,
                 required: true,
             },
+            role: {
+                type: String,
+                enum: ['admin', 'superadmin', 'candidate'],
+                default: 'admin'
+            }
         }, {
         timestamps: true
     }

@@ -28,7 +28,7 @@ const registerUser = asyncHandler(async (req, res) => {
             _id: user.id,
             name: user.name,
             email: user.email,
-            token: generatToken(user._id)
+            token: generatToken(user)
         })
     }
     else {
@@ -51,7 +51,7 @@ const loginUser = asyncHandler(async (req, res) => {
             _id: user.id,
             name: user.name,
             email: user.email,
-            token: generatToken(user._id)
+            token: generatToken(user)
         })
     }
     else {
@@ -71,8 +71,12 @@ const getMe = asyncHandler(async (req, res) => {
 })
 
 // Generate token
-const generatToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generatToken = (user) => {
+    const payload = {
+        id: user._id,
+        role: user.role
+    }
+    return jwt.sign({ payload }, process.env.JWT_SECRET, {
         expiresIn: '30d'
     })
 }
