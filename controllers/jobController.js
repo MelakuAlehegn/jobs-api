@@ -11,7 +11,6 @@ const getJobs = asyncHandler(async (req, res) => {
     const filter = {};
     const sorted = {}
     let query;
-
     if (company) {
         filter.company = company;
     } if (position) {
@@ -19,7 +18,6 @@ const getJobs = asyncHandler(async (req, res) => {
     } if (location) {
         filter.location = location;
     }
-    filter.user = req.user.id
     query = Job.find(filter)
     if (sort === "company") {
         sorted.company = company
