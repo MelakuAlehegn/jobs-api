@@ -8,9 +8,6 @@ const registerUser = asyncHandler(async (req, res) => {
     const { error } = validateUser(req.body)
     if (error) return res.status(400).json(error.details[0].message)
     const { name, email, password, role } = req.body
-    // if (role === 'superadmin') {
-    //     return res.status(403).json({ message: 'You can not register Superadmin' });
-    // }
     const userExisits = await User.findOne({ email })
     if (userExisits) {
         return res.status(400).json({ message: 'User already exists' })
@@ -63,7 +60,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // Get All Users
 const getUsers = asyncHandler(async (req, res) => {
-    const user = await User.find()
+    const user = await User.find().select('-password')
     let totalUser = await User.countDocuments();
     const response = {
         allRecords: totalUser,
@@ -78,7 +75,7 @@ const getUser = asyncHandler(async (req, res) => {
     if (userId.length !== 24) {
         return res.status(400).json({ error: 'Invalid User ID' });
     }
-    const user = await User.findById(userId)
+    const user = await User.findById(userId).select('-password')
     if (!user) {
         return res.status(400).json({ error: 'User not found' })
     }
@@ -99,7 +96,7 @@ const updateUser = asyncHandler(async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, salt)
         req.body.password = hashedPassword
     }
-    const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true })
+    const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true }).select('-password')
     res.status(200).json(updatedUser)
 })
 
