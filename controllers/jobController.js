@@ -116,7 +116,7 @@ const deleteJob = asyncHandler(async (req, res) => {
         return res.status(401).json('User not found')
     }
     if (job.user.toString() !== req.user.id) {
-        return res.status(401).json('User not authorized')
+        return res.status(401).json({ message: 'User not authorized' })
     }
     await Job.findByIdAndRemove(req.params.id)
     res.status(200).json({

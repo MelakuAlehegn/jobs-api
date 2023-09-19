@@ -3,15 +3,13 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 const asyncHandler = require('express-async-handler')
 
-
-
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
     const { error } = validateUser(req.body)
     if (error) return res.status(400).json(error.details[0].message)
     const { name, email, password, role } = req.body
-    if (req.user.role !== 'superadmin') {
-        return res.status(403).json({ message: 'You do not have the necessary permissions to register a user' });
+    if (role === 'superadmin') {
+        return res.status(403).json({ message: 'You can not register Superadmin' });
     }
     const userExisits = await User.findOne({ email })
     if (userExisits) {
@@ -23,14 +21,16 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        role: role
     })
     if (user) {
         res.status(201).json({
             _id: user.id,
             name: user.name,
             email: user.email,
-            token: generatToken(user)
+            role: user.role,
+            token: generatToken(user),
         })
     }
     else {
@@ -46,7 +46,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body
     const user = await User.findOne({ email })
     if (!password || !email) {
-        res.json({ message: 'Please add your credentials' })
+        res.json({ message: 'Please add your all credentials' })
     }
     if (user && (await bcrypt.compare(password, user.password))) {
         res.json({
@@ -78,7 +78,7 @@ const getUser = asyncHandler(async (req, res) => {
     if (userId.length !== 24) {
         return res.status(400).json({ error: 'Invalid User ID' });
     }
-    const user = await User.findById(jobId)
+    const user = await User.findById(userId)
     if (!user) {
         return res.status(400).json({ error: 'User not found' })
     }
@@ -87,12 +87,17 @@ const getUser = asyncHandler(async (req, res) => {
 // Update User
 const updateUser = asyncHandler(async (req, res) => {
     const userId = req.params.id
-    if (jobId.length !== 24) {
+    if (userId.length !== 24) {
         return res.status(400).json({ error: 'Invalid User ID' });
     }
-    const user = await User.findOne(id)
+    const user = await User.findById(userId)
     if (!user) {
         return res.status(400).json({ message: `User with id:${req.params.id} not found` })
+    }
+    if (req.body.password) {
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(req.body.password, salt)
+        req.body.password = hashedPassword
     }
     const updatedUser = await User.findByIdAndUpdate(userId, req.body, { new: true })
     res.status(200).json(updatedUser)
@@ -104,22 +109,23 @@ const deleteUser = asyncHandler(async (req, res) => {
     if (userId.length !== 24) {
         return res.status(400).json({ error: 'Invalid User ID' });
     }
-    const user = await User.findOne(id)
+    const user = await User.findById(userId)
     if (!user) {
         return res.status(400).json({ message: `User with id:${req.params.id} not found` })
     }
-    await User.findByIdAndRemove(req.params.id)
+    await User.findByIdAndRemove(userId)
     res.status(200).json({
-        id: req.params.id,
+        id: userId,
         name: user.name
     })
 })
+
 // Get currentely logged in user
 const getMe = asyncHandler(async (req, res) => {
-    const { _id, name, email } = await User.findById(req.user._id)
-
+    const { id, name, email } = await User.findById(req.user._id);
+    console.log(id)
     res.status(200).json({
-        id: _id,
+        id: id,
         name,
         email
     })
