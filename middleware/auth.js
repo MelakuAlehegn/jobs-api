@@ -35,7 +35,7 @@ const checkSuperAdmin = async (req, res, next) => {
 
 const checkAdmin = async (req, res, next) => {
     try {
-        if (!req.user || req.user.role !== 'admin') {
+        if (!req.user || !['admin', 'superadmin'].includes(req.user.role)) {
             return res.status(403).json({ message: 'You do not have the necessary permissions for this' });
         }
         next();

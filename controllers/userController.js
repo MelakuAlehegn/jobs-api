@@ -8,9 +8,9 @@ const registerUser = asyncHandler(async (req, res) => {
     const { error } = validateUser(req.body)
     if (error) return res.status(400).json(error.details[0].message)
     const { name, email, password, role } = req.body
-    if (role === 'superadmin') {
-        return res.status(403).json({ message: 'You can not register Superadmin' });
-    }
+    // if (role === 'superadmin') {
+    //     return res.status(403).json({ message: 'You can not register Superadmin' });
+    // }
     const userExisits = await User.findOne({ email })
     if (userExisits) {
         return res.status(400).json({ message: 'User already exists' })
