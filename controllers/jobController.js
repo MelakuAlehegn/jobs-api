@@ -11,7 +11,6 @@ const getJobs = asyncHandler(async (req, res) => {
     const filter = {};
     const sorted = {}
     let query;
-
     if (company) {
         filter.company = company;
     } if (position) {
@@ -19,7 +18,6 @@ const getJobs = asyncHandler(async (req, res) => {
     } if (location) {
         filter.location = location;
     }
-    filter.user = req.user.id
     query = Job.find(filter)
     if (sort === "company") {
         sorted.company = company
@@ -118,7 +116,7 @@ const deleteJob = asyncHandler(async (req, res) => {
         return res.status(401).json('User not found')
     }
     if (job.user.toString() !== req.user.id) {
-        return res.status(401).json('User not authorized')
+        return res.status(401).json({ message: 'User not authorized' })
     }
     await Job.findByIdAndRemove(req.params.id)
     res.status(200).json({
